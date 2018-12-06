@@ -7,6 +7,8 @@ package bgu.spl.mics.application.passiveObjects;
  * You may add ONLY private fields and methods to this class.
  */
 public class DeliveryVehicle {
+	int license;
+	int speed;
 	/**
      * Constructor.   
      */

@@ -5,6 +5,7 @@ import bgu.spl.mics.application.passiveObjects.BookInventoryInfo;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 
 import java.io.File;
@@ -25,18 +26,36 @@ public class BookStoreRunner {
         Inventory inv = Inventory.getInstance();
         JsonObject jsonObject = null;
         try {
+            //Read the whole json file
             jsonObject = gson.fromJson(new FileReader(jsonFile), JsonObject.class);
-            System.out.println("json");
+
+
+            //Get the booksInfo list from the json.
+            JsonArray arr = jsonObject.get("initialInventory").getAsJsonArray();
+            BookInventoryInfo[] bookInventoryInfoArray = new BookInventoryInfo[arr.size()];
+
+            int i = 0;
+
+            //Iterate over the booksInfo and add them into the BookInventoryInfo array
+            for(JsonElement bookInfo : arr){
+                JsonObject book = bookInfo.getAsJsonObject();
+                String bookName;
+                int amount;
+                int price;
+
+                bookName = book.get("bookTitle").getAsString();
+                amount = book.get("amount").getAsInt();
+                price = book.get("price").getAsInt();
+
+                bookInventoryInfoArray[i] = new BookInventoryInfo(bookName,amount,price);
+
+            }
+            inv.load(bookInventoryInfoArray);
         }
         catch(FileNotFoundException e){}
 
-        JsonArray arr = jsonObject.get("initialInventory").getAsJsonArray();
-        BookInventoryInfo[] books = new BookInventoryInfo[arr.size()];
-        for(int i = 0; i<books.length;i++){
-            books[i] = new BookInventoryInfo();
-        }
 
-        System.out.println("json");
+
 
 
 
