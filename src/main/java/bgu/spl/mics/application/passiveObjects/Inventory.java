@@ -1,6 +1,7 @@
 package bgu.spl.mics.application.passiveObjects;
 
-
+import java.util.Collection;
+import java.util.LinkedList;
 
 /**
  * Passive data-object representing the store inventory.
@@ -14,12 +15,22 @@ package bgu.spl.mics.application.passiveObjects;
  */
 public class Inventory {
 
+	private static class SingletonHolder {
+		private static Inventory instance = new Inventory();
+	}
+
+	private Collection<BookInventoryInfo> books;
+
+
+	private Inventory(){
+		books = new LinkedList<>();
+	}
+
 	/**
      * Retrieves the single instance of this class.
      */
 	public static Inventory getInstance() {
-		//TODO: Implement this
-		return null;
+		return SingletonHolder.instance;
 	}
 	
 	/**
@@ -29,7 +40,10 @@ public class Inventory {
      * @param inventory 	Data structure containing all data necessary for initialization
      * 						of the inventory.
      */
-	public void load (BookInventoryInfo[ ] inventory ) {
+	public void load (BookInventoryInfo[] inventory ) {
+		for(BookInventoryInfo bookInfo : inventory){
+			books.add(bookInfo);
+		}
 		
 	}
 	
@@ -42,8 +56,12 @@ public class Inventory {
      * 			second should reduce by one the number of books of the desired type.
      */
 	public OrderResult take (String book) {
-		
-		return null;
+		BookInventoryInfo bookInfo = checkAvailabilityAndGetBook(book);
+		if(bookInfo != null){
+			bookInfo.decrementAmount();
+			return OrderResult.SUCCESSFULLY_TAKEN;
+		}
+		return OrderResult.NOT_IN_STOCK;
 	}
 	
 	
@@ -55,7 +73,10 @@ public class Inventory {
      * @return the price of the book if it is available, -1 otherwise.
      */
 	public int checkAvailabiltyAndGetPrice(String book) {
-		//TODO: Implement this
+		BookInventoryInfo bookInfo = checkAvailabilityAndGetBook(book);
+		if(bookInfo != null){
+			return bookInfo.getPrice();
+		}
 		return -1;
 	}
 	
@@ -68,6 +89,23 @@ public class Inventory {
      * This method is called by the main method in order to generate the output.
      */
 	public void printInventoryToFile(String filename){
-		//TODO: Implement this
+		//TODO: Implement this later:/
+	}
+
+	/**
+	 *
+	 *
+	 * @param book
+	 * @return the {@BookInventoryInfo} if available. null if not.
+	 */
+	private BookInventoryInfo checkAvailabilityAndGetBook(String book){
+		for(BookInventoryInfo bookInfo : books){
+			if(bookInfo.getBookTitle() == book){
+				if(bookInfo.getAmountInInventory() > 0){
+					return bookInfo;
+				} else break;
+			}
+		}
+		return null;
 	}
 }

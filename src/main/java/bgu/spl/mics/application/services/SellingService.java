@@ -14,14 +14,13 @@ import bgu.spl.mics.MicroService;
  */
 public class SellingService extends MicroService{
 
-	public SellingService() {
-		super("Change_This_Name");
-		// TODO Implement this
+	public SellingService(int count) {
+		super("SellingService " + count);
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
+
 		
 	}
 

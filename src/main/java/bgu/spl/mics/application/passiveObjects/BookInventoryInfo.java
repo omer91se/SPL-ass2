@@ -25,8 +25,7 @@ public class BookInventoryInfo {
      * @return The title of this book.   
      */
 	public String getBookTitle() {
-		// TODO Implement this
-		return null;
+		return bookTitle;
 	}
 
 	/**
@@ -35,8 +34,7 @@ public class BookInventoryInfo {
      * @return amount of available books.      
      */
 	public int getAmountInInventory() {
-		// TODO Implement this
-		return 0;
+		return amountInInventory;
 	}
 
 	/**
@@ -45,8 +43,11 @@ public class BookInventoryInfo {
      * @return the price of the book.
      */
 	public int getPrice() {
-		// TODO Implement this
-		return 0;
+		return price;
+	}
+
+	public void decrementAmount(){
+		amountInInventory--;
 	}
 	
 	

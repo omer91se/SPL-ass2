@@ -1,5 +1,8 @@
 package bgu.spl.mics.application.passiveObjects;
 
+import javafx.util.Pair;
+
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -9,37 +12,51 @@ import java.util.List;
  * You may add fields and methods to this class as you see fit (including public methods).
  */
 public class Customer {
+	int id;
+	String name;
+	String address;
+	int distance;
+	int cardNumber;
+	int credit;
+	List<Pair<String,Integer>> orderSchedule;
+	List<OrderReceipt> orderReceiptList;
 
+	public Customer(int id, String name, String address, int distance, Pair<Integer,Integer> creditCard, List<Pair<String,Integer>> orderSchedule) {
+		this.id = id;
+		this.name = name;
+		this.address = address;
+		this.distance = distance;
+		this.orderSchedule = orderSchedule;
+		this.credit = creditCard.getValue();
+		this.cardNumber = creditCard.getKey();
+		this.orderReceiptList = new LinkedList<>();
+	}
 	/**
      * Retrieves the name of the customer.
      */
 	public String getName() {
-		// TODO Implement this
-		return null;
+		return name;
 	}
 
 	/**
      * Retrieves the ID of the customer  . 
      */
 	public int getId() {
-		// TODO Implement this
-		return 0;
+		return id;
 	}
 	
 	/**
      * Retrieves the address of the customer.  
      */
 	public String getAddress() {
-		// TODO Implement this
-		return null;
+		return address;
 	}
 	
 	/**
      * Retrieves the distance of the customer from the store.  
      */
 	public int getDistance() {
-		// TODO Implement this
-		return 0;
+		return distance;
 	}
 
 	
@@ -49,26 +66,36 @@ public class Customer {
      * @return A list of receipts.
      */
 	public List<OrderReceipt> getCustomerReceiptList() {
-		// TODO Implement this
-		return null;
+		return orderReceiptList;
 	}
-	
+
 	/**
      * Retrieves the amount of money left on this customers credit card.
      * <p>
      * @return Amount of money left.   
      */
 	public int getAvailableCreditAmount() {
-		// TODO Implement this
-		return 0;
+		return credit;
 	}
 	
 	/**
      * Retrieves this customers credit card serial number.    
      */
 	public int getCreditNumber() {
-		// TODO Implement this
-		return 0;
+		return cardNumber;
 	}
-	
+
+	/**
+	 * Reduce {@code amount} from {@code credit}.
+	 * <p>
+	 * @param amount
+	 */
+	public void charge(int amount){
+		credit -= amount;
+	}
+
+	public List<Pair<String,Integer>> getOrderSchedule(){
+		return orderSchedule;
+	}
+
 }

@@ -2,7 +2,8 @@ package bgu.spl.mics.application.passiveObjects;
 
 import bgu.spl.mics.Future;
 
-import java.util.Collection;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Passive object representing the resource manager.
@@ -14,13 +15,23 @@ import java.util.Collection;
  * You can add ONLY private methods and fields to this class.
  */
 public class ResourcesHolder {
-	Collection<DeliveryVehicle> vehicles;
+
+	private static class SingletonHolder {
+		private static ResourcesHolder instance = new ResourcesHolder();
+	}
+
+	private Queue<DeliveryVehicle> vehicles;
+
+	private ResourcesHolder(){
+		vehicles = new LinkedList<>();
+	}
+
+
 	/**
      * Retrieves the single instance of this class.
      */
 	public static ResourcesHolder getInstance() {
-		//TODO: Implement this
-		return null;
+		return SingletonHolder.instance;
 	}
 	
 	/**
@@ -30,8 +41,11 @@ public class ResourcesHolder {
      * @return 	{@link Future<DeliveryVehicle>} object which will resolve to a 
      * 			{@link DeliveryVehicle} when completed.   
      */
+	//TODO when we are grey and old.
 	public Future<DeliveryVehicle> acquireVehicle() {
-		//TODO: Implement this
+		DeliveryVehicle van = vehicles.remove();
+		Future<DeliveryVehicle> future = new Future<>();
+		future.resolve(van);
 		return null;
 	}
 	
@@ -41,8 +55,9 @@ public class ResourcesHolder {
      * <p>
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
+	//TODO Same as acquire.
 	public void releaseVehicle(DeliveryVehicle vehicle) {
-		//TODO: Implement this
+
 	}
 	
 	/**
@@ -51,7 +66,8 @@ public class ResourcesHolder {
      * @param vehicles	Array of {@link DeliveryVehicle} instances to store.
      */
 	public void load(DeliveryVehicle[] vehicles) {
-		//TODO: Implement this
+		for(DeliveryVehicle van : vehicles)
+			this.vehicles.add(van);
 	}
 
 }

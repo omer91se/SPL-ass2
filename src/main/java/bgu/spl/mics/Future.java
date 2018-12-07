@@ -73,7 +73,7 @@ public class Future<T> {
      *         elapsed, return null.
      */
 
-	//TODO come back and understand that again when we are grey and old.
+
 	public T get(long timeout, TimeUnit unit) {
 		T res =  null;
 		if(isDone())
