@@ -12,17 +12,19 @@ import java.util.List;
  * You may add fields and methods to this class as you see fit (including public methods).
  */
 public class Customer {
-	int id;
-	String name;
-	String address;
-	int distance;
-	int cardNumber;
-	int credit;
-	List<Pair<String,Integer>> orderSchedule;
-	List<OrderReceipt> orderReceiptList;
+    private int maxTick;
+	private int id;
+    private String name;
+    private String address;
+    private int distance;
+    private int cardNumber;
+    private int credit;
+    private List<Pair<String,Integer>> orderSchedule;
+    private List<OrderReceipt> orderReceiptList;
+
 
 	public Customer(int id, String name, String address, int distance, Pair<Integer,Integer> creditCard, List<Pair<String,Integer>> orderSchedule) {
-		this.id = id;
+	    this.id = id;
 		this.name = name;
 		this.address = address;
 		this.distance = distance;
@@ -30,6 +32,8 @@ public class Customer {
 		this.credit = creditCard.getValue();
 		this.cardNumber = creditCard.getKey();
 		this.orderReceiptList = new LinkedList<>();
+
+		findMaxTick();
 	}
 	/**
      * Retrieves the name of the customer.
@@ -97,5 +101,34 @@ public class Customer {
 	public List<Pair<String,Integer>> getOrderSchedule(){
 		return orderSchedule;
 	}
+
+    /**
+     * Adds {@code receipt} to {@code orderReceiptList}.
+     * <p>
+     * @param receipt
+     */
+	public void addRecipt(OrderReceipt receipt) {
+        this.orderReceiptList.add(receipt);
+    }
+
+    /**
+     * Retrieves the latest tick order.
+     */
+    public int getMaxTick(){
+	    return maxTick;
+    }
+
+    /**
+     * Finds the latest tick order(largest Tick).
+     */
+    private void findMaxTick(){
+	    int maxTick = 0;
+	    for(Pair<String,Integer> schedulePair : this.orderSchedule ){
+            if(schedulePair.getValue() > maxTick)
+                maxTick = schedulePair.getValue();
+        }
+	    this.maxTick = maxTick;
+    }
+
 
 }

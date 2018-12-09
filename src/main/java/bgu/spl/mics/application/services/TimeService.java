@@ -13,8 +13,11 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class TimeService extends MicroService{
+	int speed;
+	int duration;
+	int tick;
 
-	public TimeService() {
+	public TimeService(int speed, int duration) {
 		super("Change_This_Name");
 		// TODO Implement this
 	}

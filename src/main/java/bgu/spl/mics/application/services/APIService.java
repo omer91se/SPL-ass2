@@ -10,6 +10,7 @@ import javafx.util.Pair;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * APIService is in charge of the connection between a client and the store.
@@ -34,22 +35,70 @@ public class APIService extends MicroService{
 
 	@Override
 	protected void initialize() {
-		System.out.println("Sender " + getName() + " started");
+		System.out.println(getName() + " started");
 		subscribeBroadcast(TickBroadcast.class, message -> {
-			List<Pair<String,Integer>> schedule = customer.getOrderSchedule();
+		    List<Pair<String,Integer>> schedule = customer.getOrderSchedule();
+
+            //If the current tick is a scheduled one, order the book (by sending BookOrderEvent).
+            List<String> booksToOrder = new LinkedList<>();
+
+            //Collecting books needed to be order on current message tick.
+            for(Pair<String,Integer> schedulePair : schedule) {
+                if (message.getTick() == schedulePair.getValue()) {
+                    booksToOrder.add(schedulePair.getKey());
+                }
+            }
+
+            List<Future<OrderReceipt>> reciptFutureList = new LinkedList<>();
+            //Ordering those books.
+            for(String book : booksToOrder){
+               Future<OrderReceipt> futureReceipt = sendEvent(new BookOrderEvent(book));
+               reciptFutureList.add(futureReceipt);
+            }
+
+            OrderReceipt resolved = null;
+
+            //Getting thr receipts from the futures.
+            for(Future<OrderReceipt> future : reciptFutureList){
+                if(future != null){
+                    //TODO how much time to wait?
+                    resolved = future.get(500, TimeUnit.MILLISECONDS);
+                    if(resolved != null){
+                        customer.addRecipt(resolved);
+                    }
+                    else
+                        System.out.println("[" + getName() + " initialize]: Time has elapsed, no services has resolved the event - terminating");
+                }
+                else
+                    System.out.println("[" + getName() + " initialize]: No Micro-Service has registered to handle ExampleEvent events! The event cannot be processed");
+            }
+
+
+/*
 			for(Pair<String,Integer> schedulePair : schedule){
-				if(message.getTick() == schedulePair.getValue()){
-					//TODO ORDER THE BOOK!!!! (Copy from the examples [: )
-				}
+				if(message.getTick() == schedulePair.getValue()) {
+                    futureRecipt = (Future<OrderReceipt>) sendEvent(new BookOrderEvent(schedulePair.getKey()));
+
+                    if (futureRecipt != null) {
+                        //TODO delete.
+                        resolved = futureRecipt.get(100, TimeUnit.MILLISECONDS);
+                        if(resolved != null) {
+                            customer.addRecipt(resolved);
+                        }
+                        else
+                            System.out.println("Time has elapsed, no services has resolved the event - terminating");
+                    }
+                    else
+                        System.out.println("No Micro-Service has registered to handle ExampleEvent events! The event cannot be processed");
+                }
 			}
+*/
 
 
+            //If this customer done ordering, terminate.
+			if(message.getTick() >= customer.getMaxTick())
+			    terminate();
 		});
 
-
-	//	Future<OrderReceipt> futureObject = (Future<OrderReceipt>)sendEvent(new BookOrderEvent());
-
-		
 	}
-
 }
