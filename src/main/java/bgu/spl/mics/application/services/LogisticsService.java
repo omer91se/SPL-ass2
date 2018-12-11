@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
+import bgu.spl.mics.Future;
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.DeliveryEvent;
+import bgu.spl.mics.application.passiveObjects.DeliveryVehicle;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * Logistic service in charge of delivering books that have been purchased to customers.
@@ -13,14 +18,26 @@ import bgu.spl.mics.MicroService;
  */
 public class LogisticsService extends MicroService {
 
+
 	public LogisticsService(int count) {
 		super("LogisticsService" + count);
-		// TODO Implement this
+
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
+		subscribeEvent(DeliveryEvent.class, message -> {
+			Future<DeliveryVehicle> futureObject = sendEvent(new TaviLiOtoEvent());
+			if(futureObject != null) {
+				DeliveryVehicle van = futureObject.get();
+				van.deliver(message.getAddress(), message.getDistance());
+				sendEvent(new KahOtotTodaEvent(van));
+
+			}
+			else{
+				System.out.println("[" + getName() + "]: no resourceService handled that request. sorry. byeeeeeeeeeeeee");
+			}
+		});
 		
 	}
 

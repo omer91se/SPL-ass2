@@ -49,17 +49,17 @@ public class APIService extends MicroService{
                 }
             }
 
-            List<Future<OrderReceipt>> reciptFutureList = new LinkedList<>();
+            List<Future<OrderReceipt>> receiptFutureList = new LinkedList<>();
             //Ordering those books.
             for(String book : booksToOrder){
-               Future<OrderReceipt> futureReceipt = sendEvent(new BookOrderEvent(book));
-               reciptFutureList.add(futureReceipt);
+               Future<OrderReceipt> futureReceipt = sendEvent(new BookOrderEvent(book, customer,message.getTick()));
+               receiptFutureList.add(futureReceipt);
             }
 
             OrderReceipt resolved = null;
 
             //Getting thr receipts from the futures.
-            for(Future<OrderReceipt> future : reciptFutureList){
+            for(Future<OrderReceipt> future : receiptFutureList){
                 if(future != null){
                     //TODO how much time to wait?
                     resolved = future.get(500, TimeUnit.MILLISECONDS);
@@ -72,27 +72,6 @@ public class APIService extends MicroService{
                 else
                     System.out.println("[" + getName() + " initialize]: No Micro-Service has registered to handle ExampleEvent events! The event cannot be processed");
             }
-
-
-/*
-			for(Pair<String,Integer> schedulePair : schedule){
-				if(message.getTick() == schedulePair.getValue()) {
-                    futureRecipt = (Future<OrderReceipt>) sendEvent(new BookOrderEvent(schedulePair.getKey()));
-
-                    if (futureRecipt != null) {
-                        //TODO delete.
-                        resolved = futureRecipt.get(100, TimeUnit.MILLISECONDS);
-                        if(resolved != null) {
-                            customer.addRecipt(resolved);
-                        }
-                        else
-                            System.out.println("Time has elapsed, no services has resolved the event - terminating");
-                    }
-                    else
-                        System.out.println("No Micro-Service has registered to handle ExampleEvent events! The event cannot be processed");
-                }
-			}
-*/
 
 
             //If this customer done ordering, terminate.

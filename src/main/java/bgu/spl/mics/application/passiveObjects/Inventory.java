@@ -55,10 +55,9 @@ public class Inventory {
      * 			The first should not change the state of the inventory while the 
      * 			second should reduce by one the number of books of the desired type.
      */
-	public OrderResult take (String book) {
+	public OrderResult take(String book) {
 		BookInventoryInfo bookInfo = checkAvailabilityAndGetBook(book);
-		if(bookInfo != null){
-			bookInfo.decrementAmount();
+		if(bookInfo != null && bookInfo.takeBook()){
 			return OrderResult.SUCCESSFULLY_TAKEN;
 		}
 		return OrderResult.NOT_IN_STOCK;

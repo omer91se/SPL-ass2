@@ -94,8 +94,12 @@ public class Customer {
 	 * <p>
 	 * @param amount
 	 */
-	public void charge(int amount){
-		credit -= amount;
+	public boolean charge(int amount){
+		if(getAvailableCreditAmount() >= amount) {
+			credit -= amount;
+			return true;
+		}
+		return false;
 	}
 
 	public List<Pair<String,Integer>> getOrderSchedule(){
@@ -131,4 +135,11 @@ public class Customer {
     }
 
 
+	/**
+	 * adds {@code refundAmount} to the customer {@code credit}
+	 * @param refundAmount to add.
+	 */
+	public void refund(Integer refundAmount) {
+    	this.credit =+ refundAmount;
+	}
 }
