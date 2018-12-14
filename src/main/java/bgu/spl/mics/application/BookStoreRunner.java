@@ -1,6 +1,7 @@
 package bgu.spl.mics.application;
 
 
+import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.passiveObjects.*;
 import bgu.spl.mics.application.services.*;
 import com.google.gson.Gson;
@@ -25,23 +26,20 @@ public class BookStoreRunner {
         Thread[][] threadArrays = new Thread[6][];
         parseAndInit(threadArrays,args[0]);
 
-        //TODO close the threads.
-    }
+        int counter = 1;
+        for(Thread[] threads : threadArrays)
+            for(Thread thread : threads){
+                try {
+                    thread.join();
+                    System.out.println(thread.getId() + " joined . " + counter );
+                    counter++;
+                }
+                catch (InterruptedException e){
 
-    /**
-     * Create Service threads, starts them, and add them to the {@code threadArray}.
-     * <p>
-     * @param quantity of threads.
-     * @param threadArray
-     */
-    public static void threadsInit(int quantity, Thread[] threadArray){
-        threadArray = new Thread[quantity];
-        Thread thread;
-        for (int i = 1; i <= quantity; i++) {
-            thread = new Thread(new LogisticsService(i));
-            threadArray[i - 1] = thread;
-            thread.start();
-        }
+                }
+
+            }
+        System.out.println("FINISH");
     }
 
     /**
@@ -89,12 +87,15 @@ public class BookStoreRunner {
             }
             inv.load(bookInventoryInfoArray);
 
-            JsonArray resourcesInitArray = jsonObject.get("initialInventory").getAsJsonArray();
-            DeliveryVehicle[] deliveryVehicleArray = new DeliveryVehicle[resourcesInitArray.size()];
+            JsonArray resourcesInitArray = jsonObject.get("initialResources").getAsJsonArray();
+
 
             i = 0;
+
+            JsonArray vehiclesArray = resourcesInitArray.get(0).getAsJsonObject().get("vehicles").getAsJsonArray();
+            DeliveryVehicle[] deliveryVehicleArray = new DeliveryVehicle[vehiclesArray.size()];
             //Iterate over the booksInfo and add them into the BookInventoryInfo array
-            for (JsonElement vehicleInfo : resourcesInitArray) {
+            for (JsonElement vehicleInfo : vehiclesArray) {
                 JsonObject vehicle = vehicleInfo.getAsJsonObject();
                 int license;
                 int speed;
@@ -106,10 +107,10 @@ public class BookStoreRunner {
                 i++;
             }
             holder.load(deliveryVehicleArray);
-            //TODO TIME Service.
-
 
             JsonObject servicesJson = jsonObject.get("services").getAsJsonObject();
+
+
 
 
             int servicesQuant;
@@ -117,34 +118,56 @@ public class BookStoreRunner {
             //Init SellingService Threads
             servicesQuant = servicesJson.get("selling").getAsInt();
             Thread[] sellingThreadsArray = new Thread[servicesQuant];
-            threadsInit(servicesQuant,sellingThreadsArray);
+            Thread sellingThread;
+            for (int j = 1; j <= servicesQuant; j++) {
+                sellingThread = new Thread(new SellingService(j));
+                sellingThreadsArray[j-1] = sellingThread;
+
+                sellingThread.start();
+            }
             threadArrays[1] = sellingThreadsArray;
 
             //Init InventoryService Threads
             servicesQuant = servicesJson.get("inventoryService").getAsInt();
             Thread[] inventoryThreadsArray = new Thread[servicesQuant];
-            threadsInit(servicesQuant,inventoryThreadsArray);
+            Thread inventoryThread;
+            for (int j = 1; j <= servicesQuant; j++) {
+                inventoryThread = new Thread(new InventoryService(j));
+                inventoryThreadsArray[j-1] = inventoryThread;
+                inventoryThread.start();
+            }
             threadArrays[2] = inventoryThreadsArray;
 
             //Init LogisticsService Threads
             servicesQuant = servicesJson.get("logistics").getAsInt();
             Thread[] logisticThreadsArray = new Thread[servicesQuant];
-            threadsInit(servicesQuant,logisticThreadsArray);
+            Thread logisticThread;
+            for (int j = 1; j <= servicesQuant; j++) {
+                logisticThread = new Thread(new LogisticsService(j));
+                logisticThreadsArray[j-1] = logisticThread;
+                logisticThread.start();
+            }
             threadArrays[3] = logisticThreadsArray;
 
-                    //Init ResourceService Threads
+            //Init ResourceService Threads
             servicesQuant = servicesJson.get("resourcesService").getAsInt();
             Thread[] resourceThreadsArray = new Thread[servicesQuant];
-            threadsInit(servicesQuant,resourceThreadsArray);
+            Thread resourceThread;
+            for (int j = 1; j <= servicesQuant; j++) {
+                resourceThread = new Thread(new ResourceService(j));
+                resourceThreadsArray[j-1] = resourceThread;
+                resourceThread.start();
+            }
             threadArrays[4] = resourceThreadsArray;
 
              //Init APIService Threads
-            JsonArray customersJson = jsonObject.get("customers").getAsJsonArray();
+            JsonArray customersJson = servicesJson.get("customers").getAsJsonArray();
             servicesQuant = customersJson.size();
             Customer[] customers = new Customer[servicesQuant];
 
+            i=0;
             //Iterate over the customers info from json file, and create an array of customers.
-            for (JsonElement customerInfo : customersJson) {
+            for (JsonElement customerInfo : customersJson) { ;
                 JsonObject customerObj = customerInfo.getAsJsonObject();
                 int id = customerObj.get("id").getAsInt();
                 String name = customerObj.get("name").getAsString();
@@ -152,8 +175,8 @@ public class BookStoreRunner {
                 int distance = customerObj.get("distance").getAsInt();
 
                 //Create creditCard info Pair.
-                int creditNumber = customerObj.get("number").getAsInt();
-                int creditAmount = customerObj.get("amount").getAsInt();
+                int creditNumber = customerObj.get("creditCard").getAsJsonObject().get("number").getAsInt();
+                int creditAmount = customerObj.get("creditCard").getAsJsonObject().get("amount").getAsInt();
                 Pair<Integer, Integer> creditCard = new Pair(creditNumber, creditAmount);
 
                 //Create orderSchedule list.
@@ -170,8 +193,8 @@ public class BookStoreRunner {
                     orderScheduleList.add(schedulePair);
                 }
 
-                for (i = 0; i < customers.length; i++)
                     customers[i] = new Customer(id, name, address, distance, creditCard, orderScheduleList);
+                    i++;
             }
 
             //Create an APIService thread for each customer, starts it and put it into APIThreadsArray.
@@ -187,7 +210,18 @@ public class BookStoreRunner {
 
             threadArrays[5] = APIThreadsArray;
 
+            //Initializing the TimeService.
+            int speed = servicesJson.get("time").getAsJsonObject().get("speed").getAsInt();
+            int duration = servicesJson.get("time").getAsJsonObject().get("duration").getAsInt();
+
+            Thread[] timeServiceArray = new Thread[1];
+            Thread timeThread = new Thread(new TimeService(speed,duration));
+            timeServiceArray[0] = timeThread;
+            timeThread.start();
+
+            threadArrays[0] = timeServiceArray;
 
         } catch (FileNotFoundException e) {}
     }
+
 }

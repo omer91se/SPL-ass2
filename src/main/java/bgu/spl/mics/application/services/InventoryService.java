@@ -3,6 +3,7 @@ package bgu.spl.mics.application.services;
 import bgu.spl.mics.MicroService;
 import bgu.spl.mics.application.messages.AcquireBookEvent;
 import bgu.spl.mics.application.messages.AvailabilityAndPriceEvent;
+import bgu.spl.mics.application.messages.TickBroadcast;
 import bgu.spl.mics.application.passiveObjects.Inventory;
 import bgu.spl.mics.application.passiveObjects.OrderResult;
 
@@ -22,11 +23,21 @@ public class InventoryService extends MicroService{
 
 	public InventoryService(int count) {
 		super("InventoryService" + count);
+		inventory = Inventory.getInstance();
 
 	}
 
 	@Override
 	protected void initialize() {
+		//System.out.println(getName() + " started");
+
+		subscribeBroadcast(TickBroadcast.class, message->{
+			//System.out.println("[" + getName() + "]: got tick: " + message.getTick());
+			if(message.getLastTick() == message.getTick()) {
+				System.out.println("[" + getName() + "]: Terminating Gracefully! Thread-" + Thread.currentThread().getId() + "::: " + ter.incrementAndGet());
+				terminate();
+			}
+		});
 
 		// Handles the event AvailabilityAndPriceEvent with a relevant callback.
 		subscribeEvent(AvailabilityAndPriceEvent.class, message->{

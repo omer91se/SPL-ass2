@@ -2,6 +2,6 @@ package bgu.spl.mics.application.messages;
 
 import bgu.spl.mics.Event;
 
-public class TaviLiOtoEvent implements Event {
+public class AcquireVehicleEvent implements Event {
 
 }

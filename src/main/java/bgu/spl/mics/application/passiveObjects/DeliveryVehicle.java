@@ -46,9 +46,10 @@ public class DeliveryVehicle {
 	public void deliver(String address, int distance) {
 		long travelTime = distance/getSpeed();
 		//TODO check this output.
-		System.out.println("Vehicle number " + getLicense() + " Starting to drive to " + address + " will take " + travelTime);
+		//System.out.println("Vehicle number " + getLicense() + " Starting to drive to " + address + " will take " + travelTime + " milliseconds");
 		try {
 			TimeUnit.MILLISECONDS.sleep(travelTime);
+			//System.out.println("[DeliveryVehicle]: done the delivery" );
 		}
 		catch (InterruptedException e){}
 	}

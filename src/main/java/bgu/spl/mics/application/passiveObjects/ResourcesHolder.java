@@ -3,7 +3,9 @@ package bgu.spl.mics.application.passiveObjects;
 import bgu.spl.mics.Future;
 
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.Semaphore;
 
 /**
  * Passive object representing the resource manager.
@@ -20,10 +22,12 @@ public class ResourcesHolder {
 		private static ResourcesHolder instance = new ResourcesHolder();
 	}
 
+	private Queue<Future<DeliveryVehicle>> futureQueue;
 	private Queue<DeliveryVehicle> vehicles;
 
 	private ResourcesHolder(){
 		vehicles = new LinkedList<>();
+		futureQueue = new LinkedList<>();
 	}
 
 
@@ -41,12 +45,16 @@ public class ResourcesHolder {
      * @return 	{@link Future<DeliveryVehicle>} object which will resolve to a 
      * 			{@link DeliveryVehicle} when completed.   
      */
-	//TODO when we are grey and old.
-	public Future<DeliveryVehicle> acquireVehicle() {
-		DeliveryVehicle van = vehicles.remove();
+	//Synchronized to avoid more than one thread trying to remove a vehicle while there is only one vehicle in the queue.
+	public synchronized Future<DeliveryVehicle> acquireVehicle() {
 		Future<DeliveryVehicle> future = new Future<>();
-		future.resolve(van);
-		return null;
+		if(!vehicles.isEmpty()) {
+			DeliveryVehicle van = vehicles.remove();
+			future.resolve(van);
+		}
+		else
+			futureQueue.add(future);
+		return future;
 	}
 	
 	/**
@@ -55,9 +63,14 @@ public class ResourcesHolder {
      * <p>
      * @param vehicle	{@link DeliveryVehicle} to be released.
      */
-	//TODO Same as acquire.
 	public void releaseVehicle(DeliveryVehicle vehicle) {
-
+		//Synchronized to avoid more than one thread trying to remove a future while there is only one future in the queue
+		synchronized (futureQueue) {
+			if (!futureQueue.isEmpty())
+				futureQueue.remove().resolve(vehicle);
+			else
+				this.vehicles.add(vehicle);
+		}
 	}
 	
 	/**
@@ -68,6 +81,7 @@ public class ResourcesHolder {
 	public void load(DeliveryVehicle[] vehicles) {
 		for(DeliveryVehicle van : vehicles)
 			this.vehicles.add(van);
+
 	}
 
 }

@@ -26,7 +26,7 @@ public class SellingService extends MicroService{
 	private static AtomicInteger orderId = new AtomicInteger(1);
 
 	public SellingService(int count) {
-		super("SellingService " + count);
+		super("SellingService" + count);
 		moneyRegister = MoneyRegister.getInstance();
 		tick = 1;
 	}
@@ -35,9 +35,22 @@ public class SellingService extends MicroService{
 	protected void initialize() {
 		System.out.println(getName() + " started");
 
-		subscribeBroadcast(TickBroadcast.class, message->this.tick = message.getTick());
+		subscribeBroadcast(TickBroadcast.class, message->{
+			System.out.println("[" + getName() + "]: " + "tick: " + message.getTick() );
+			if(message.getLastTick() == message.getTick()) {
+				terminate();
+				System.out.println("[" + getName() + "]: Terminating Gracefully! Thread-" + Thread.currentThread().getId() + "::: " + ter.incrementAndGet());
+				return;
+			}
+
+			this.tick = message.getTick();
+
+			});
 
 		subscribeEvent(BookOrderEvent.class, message -> {
+			System.out.println("[" + getName() + "]: Got OrderBookEvent: " + message.getBookName() + " from: " + message.getCustomer().getName());
+			System.out.println(message.getCustomer().getName() + " got: " + message.getCustomer().getAvailableCreditAmount());
+
 			Integer price = sendBookAvailabilityAndGetPriceEvent(message);
 
 			//price == -1 means that the book is not available.
@@ -45,8 +58,7 @@ public class SellingService extends MicroService{
 				if(price != null && price != -1) {
 					synchronized (message.getCustomer()) {
 						if (!message.getCustomer().charge(price)) {
-							System.out.println("[" + getName() + "]:" + " Not enough money, terminating");
-							return;
+							System.out.println("[" + getName() + "]:" + " Not enough money");
 						}
 
 						//customer has enough money to purchase the book.
@@ -55,25 +67,31 @@ public class SellingService extends MicroService{
 							//The book is out of stock, return money to customer.
 							if (!(gotBook = sendBookAcquireEvent(message))) {
 								message.getCustomer().refund(price);
-								return;
 							}
-
+							System.out.println("[" + getName() + "]: got the book: " + message.getBookName() + " for: " + message.getCustomer().getName());
 						}
 					}
 				}
 
+			OrderReceipt receipt = null;
+			System.out.println("[" + getName() + "]:" + " Creating receipt");
 			if(gotBook != null && gotBook){
 				sendLogisticEvent(message);
+				System.out.println("[" + getName() + "]:" + " logistic event Sent");
+				//Create the receipt
+				int orderId = this.orderId.incrementAndGet();
+				int customerId = message.getCustomer().getId();
+				String bookTitle = message.getBookName();
+
+				receipt = new OrderReceipt(orderId,getName(),customerId,bookTitle,price,this.tick,message.getTick(),this.tick);
+				moneyRegister.file(receipt);
+				System.out.println("[" + getName() + "]: receipt issued, completing: " + message.getBookName() + " for: " + message.getCustomer().getName());
+				System.out.println(message.getCustomer().getName() + " now have: " + message.getCustomer().getAvailableCreditAmount());
+
 			}
-
-			//Create the receipt
-			int orderId = this.orderId.incrementAndGet();
-			int customerId = message.getCustomer().getId();
-			String bookTitle = message.getBookName();
-
-			OrderReceipt receipt = new OrderReceipt(orderId,getName(),customerId,bookTitle,price,this.tick,message.getTick(),this.tick);
-			moneyRegister.file(receipt);
+			System.out.println("[" + getName() + "]:" + " Complete");
 			complete(message, receipt);
+			System.out.println("[" + getName() + "]:" + " Done!!");
 		});
 	}
 
@@ -87,7 +105,7 @@ public class SellingService extends MicroService{
 		Integer price = null;
 		Future<Integer> bookAvailNPriceFuture = (Future<Integer>) sendEvent(new AvailabilityAndPriceEvent(message.getBookName()));
 		if (bookAvailNPriceFuture != null) {
-			price = bookAvailNPriceFuture.get(100, TimeUnit.MILLISECONDS);
+			price = bookAvailNPriceFuture.get();
 		}
 		return price;
 	}
@@ -101,7 +119,7 @@ public class SellingService extends MicroService{
 		Boolean bookAcquired = false;
 		Future<Boolean> bookAcquiredFuture = (Future<Boolean>) sendEvent(new AcquireBookEvent(message.getBookName()));
 		if (bookAcquiredFuture != null) {
-			bookAcquired = bookAcquiredFuture.get(100, TimeUnit.MILLISECONDS);
+			bookAcquired = bookAcquiredFuture.get();
 
 		}
 		else{

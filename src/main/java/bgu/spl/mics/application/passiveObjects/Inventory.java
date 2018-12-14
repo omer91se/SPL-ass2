@@ -99,7 +99,7 @@ public class Inventory {
 	 */
 	private BookInventoryInfo checkAvailabilityAndGetBook(String book){
 		for(BookInventoryInfo bookInfo : books){
-			if(bookInfo.getBookTitle() == book){
+			if(bookInfo.getBookTitle().equals(book)){
 				if(bookInfo.getAmountInInventory() > 0){
 					return bookInfo;
 				} else break;

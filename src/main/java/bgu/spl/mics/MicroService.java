@@ -3,6 +3,7 @@ package bgu.spl.mics;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * The MicroService is an abstract class that any micro-service in the system
@@ -26,6 +27,9 @@ public abstract class MicroService implements Runnable {
 
     private boolean terminated = false;
     private final String name;
+    private static AtomicInteger count = new AtomicInteger(1);
+    private static AtomicInteger count2 = new AtomicInteger(1);
+    protected static AtomicInteger ter = new AtomicInteger(1);
 
     private Map<Class,Callback> callBackMap;
 
@@ -172,7 +176,10 @@ public abstract class MicroService implements Runnable {
             }
 
         }
+
+        //System.out.println("getting unregisterd: " + count2.incrementAndGet());
         bus.unregister(this);
+       // System.out.println("GOTTTTTT unregisterd: " + count.incrementAndGet());
     }
 
 }

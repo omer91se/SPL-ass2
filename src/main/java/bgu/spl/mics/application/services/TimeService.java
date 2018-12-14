@@ -1,6 +1,11 @@
 package bgu.spl.mics.application.services;
 
 import bgu.spl.mics.MicroService;
+import bgu.spl.mics.application.messages.TickBroadcast;
+
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.TimeUnit;
 
 /**
  * TimeService is the global system timer There is only one instance of this micro-service.
@@ -13,19 +18,43 @@ import bgu.spl.mics.MicroService;
  * You MAY change constructor signatures and even add new public constructors.
  */
 public class TimeService extends MicroService{
-	int speed;
-	int duration;
-	int tick;
+	private int speed;
+	private int duration;
+	private int tick;
 
 	public TimeService(int speed, int duration) {
-		super("Change_This_Name");
-		// TODO Implement this
+		super("TimeService");
+		this.speed = speed;
+		this.duration = duration;
+		this.tick = 1;
 	}
 
 	@Override
 	protected void initialize() {
-		// TODO Implement this
-		
+		//System.out.println(getName() + " started");
+
+		TimerTask task = new TimerTask() {
+			public void run() {
+				sendBroadcast(new TickBroadcast(tick,duration));
+				tick++;
+				if(tick == duration+1)
+					cancel();
+			}
+		};
+		Timer timer = new Timer("Timer");
+
+		timer.scheduleAtFixedRate(task, 0, speed);
+		System.out.println("[" + getName() + "]: Terminating Gracefully! Thread-" + Thread.currentThread().getId() + "::: " + ter.incrementAndGet());
+
+		try{
+		TimeUnit.MILLISECONDS.sleep(duration*speed);
+		}
+		catch(InterruptedException e){}
+
+		timer.cancel();
+		timer.purge();
+		terminate();
+
 	}
 
 }
